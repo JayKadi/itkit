@@ -1,3 +1,8 @@
+import dotenv from 'dotenv';
+
+// Load environment variables FIRST, before any other imports
+dotenv.config();
+
 import app from './app';
 
 const PORT = process.env.PORT || 5000;

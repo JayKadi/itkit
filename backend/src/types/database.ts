@@ -115,6 +115,156 @@ export interface Database {
           updated_at?: string;
         };
       };
+      tags: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          created_at?: string;
+        };
+      };
+      article_tags: {
+        Row: {
+          article_id: string;
+          tag_id: string;
+          created_at: string;
+        };
+        Insert: {
+          article_id: string;
+          tag_id: string;
+          created_at?: string;
+        };
+        Update: {
+          article_id?: string;
+          tag_id?: string;
+          created_at?: string;
+        };
+      };
+      article_feedback: {
+        Row: {
+          id: string;
+          article_id: string;
+          user_id: string | null;
+          is_helpful: boolean;
+          comment: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          article_id: string;
+          user_id?: string | null;
+          is_helpful: boolean;
+          comment?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          article_id?: string;
+          user_id?: string | null;
+          is_helpful?: boolean;
+          comment?: string | null;
+          created_at?: string;
+        };
+      };
+      search_logs: {
+        Row: {
+          id: string;
+          search_term: string;
+          results_count: number;
+          user_id: string | null;
+          top_result_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          search_term: string;
+          results_count: number;
+          user_id?: string | null;
+          top_result_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          search_term?: string;
+          results_count?: number;
+          user_id?: string | null;
+          top_result_id?: string | null;
+          created_at?: string;
+        };
+      };
+      ticket_preventions: {
+        Row: {
+          id: string;
+          article_id: string;
+          user_id: string | null;
+          issue_type: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          article_id: string;
+          user_id?: string | null;
+          issue_type?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          article_id?: string;
+          user_id?: string | null;
+          issue_type?: string | null;
+          created_at?: string;
+        };
+      };
+      repair_logs: {
+        Row: {
+          id: string;
+          device_name: string;
+          asset_tag: string | null;
+          issue_description: string;
+          resolution: string | null;
+          cost: number | null;
+          repaired_by: string | null;
+          repaired_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          device_name: string;
+          asset_tag?: string | null;
+          issue_description: string;
+          resolution?: string | null;
+          cost?: number | null;
+          repaired_by?: string | null;
+          repaired_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          device_name?: string;
+          asset_tag?: string | null;
+          issue_description?: string;
+          resolution?: string | null;
+          cost?: number | null;
+          repaired_by?: string | null;
+          repaired_at?: string;
+          created_at?: string;
+        };
+      };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
   };
 }

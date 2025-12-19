@@ -9,7 +9,11 @@
     "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["knowledge-base", "IT", "support"],
+  "keywords": [
+    "knowledge-base",
+    "IT",
+    "support"
+  ],
   "author": "Jay",
   "license": "MIT",
   "dependencies": {
