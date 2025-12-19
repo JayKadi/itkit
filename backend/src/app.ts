@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
+import articleRoutes from './routes/article';
 
 // Load environment variables
 dotenv.config();
@@ -41,6 +42,7 @@ app.get('/api', (_req: Request, res: Response) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+app.use('/api/articles', articleRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
