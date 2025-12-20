@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import articleRoutes from './routes/article';
+import categoryRoutes from './routes/categories';
+
 
 // Load environment variables
 dotenv.config();
@@ -43,6 +45,7 @@ app.get('/api', (_req: Request, res: Response) => {
 // Auth routes
 app.use('/api/auth', authRoutes);
 app.use('/api/articles', articleRoutes);
+app.use('/api/categories', categoryRoutes); 
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
