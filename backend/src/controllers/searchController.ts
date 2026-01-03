@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { supabase } from '../services/supabaseClient';
+import { AuthRequest } from '../types';
 
 // Helper function to extract quick answer from content
 const extractQuickAnswer = (content: string): string | null => {
@@ -8,7 +9,7 @@ const extractQuickAnswer = (content: string): string | null => {
   
   // Look for numbered list pattern (1. 2. 3.)
   const numberedMatch = content.match(/<ol>(.*?)<\/ol>/s);
-  if (numberedMatch) {
+  if (numberedMatch && numberedMatch[1]) {
     const listItems = numberedMatch[1].match(/<li>(.*?)<\/li>/g);
     if (listItems && listItems.length > 0) {
       return listItems
@@ -20,7 +21,7 @@ const extractQuickAnswer = (content: string): string | null => {
   
   // Look for bullet points
   const bulletMatch = content.match(/<ul>(.*?)<\/ul>/s);
-  if (bulletMatch) {
+  if (bulletMatch && bulletMatch[1]) {
     const listItems = bulletMatch[1].match(/<li>(.*?)<\/li>/g);
     if (listItems && listItems.length > 0) {
       return listItems
@@ -43,7 +44,7 @@ const extractQuickAnswer = (content: string): string | null => {
 // SEARCH ARTICLES
 // =====================================================
 export const searchArticles = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
@@ -68,7 +69,7 @@ export const searchArticles = async (
     }
 
     // Search articles using PostgreSQL ILIKE (case-insensitive)
-    const { data: articles, error } = await supabase
+    const { data: articles, error } = await (supabase
       .from('articles')
       .select(
         `
@@ -91,7 +92,7 @@ export const searchArticles = async (
       .eq('status', 'published')
       .or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%,quick_answer.ilike.%${searchTerm}%`)
       .order('view_count', { ascending: false })
-      .limit(20);
+      .limit(20) as any);
 
     if (error) {
       console.error('Search error:', error);
@@ -124,7 +125,7 @@ export const searchArticles = async (
     }
 
     // Log search for analytics
-    await supabase.from('search_logs').insert({
+    await (supabase as any).from('search_logs').insert({
       search_term: searchTerm,
       results_count: articles?.length || 0,
       top_result_id: articles?.[0]?.id || null,
