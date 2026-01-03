@@ -42,4 +42,10 @@ export const articleService = {
     const response = await api.delete<ApiResponse>(`/articles/${id}`);
     return response.data;
   },
+
+  // Search articles
+  search: async (query: string) => {
+    const response = await api.get(`/search?q=${encodeURIComponent(query)}`);
+    return response.data;
+  },
 };
