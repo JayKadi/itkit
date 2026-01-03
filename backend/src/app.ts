@@ -5,6 +5,7 @@ import authRoutes from './routes/auth';
 import articleRoutes from './routes/article';
 import categoryRoutes from './routes/categories';
 import feedbackRoutes from './routes/feedback';
+import searchRoutes from './routes/search';
 
 
 // Load environment variables
@@ -36,9 +37,10 @@ app.get('/api', (_req: Request, res: Response) => {
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',
-      articles: '/api/articles (coming soon)',
-      categories: '/api/categories (coming soon)',
-      search: '/api/search (coming soon)',
+      articles: '/api/articles',
+      categories: '/api/categories',
+      feedback: '/api/feedback',
+      search: '/api/search', 
     }
   });
 });
@@ -48,6 +50,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/categories', categoryRoutes); 
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/search', searchRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
