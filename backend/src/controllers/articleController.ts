@@ -178,8 +178,8 @@ export const getArticles = async (
         { count: 'exact' }
       );
 
-    // Filter by status (default: published)
-    if (status) {
+      // Filter by status (unless status is "all")
+    if (status && status !== 'all') {
       query = query.eq('status', status);
     }
 
