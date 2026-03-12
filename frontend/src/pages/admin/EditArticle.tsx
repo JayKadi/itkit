@@ -26,32 +26,36 @@ const EditArticlePage = () => {
     const initData = async () => {
       try {
         setFetching(true);
-        // 1. Fetch Categories
-        const catRes = await categoryService.getAll();
-        if (catRes.success && catRes.data) setCategories(catRes.data);
+        // 1. Fetch Categories for the dropdown
+      const catRes = await categoryService.getAll();
+      if (catRes.success && catRes.data) setCategories(catRes.data);
 
-        // 2. Fetch the specific article to edit
-        if (id) {
-          const artRes = await articleService.getById(id); // Ensure getById exists in your service
-          if (artRes.success && artRes.data) {
-            const art = artRes.data;
-            setTitle(art.title);
-            setCategoryId(art.category_id || '');
-            setContent(art.content);
-            setQuickAnswer(art.quick_answer || '');
-            setStatus(art.status);
+      // 2. Fetch the article
+      if (id) {
+        const artRes = await articleService.getById(id);
+        if (artRes.success && artRes.data) {
+          const art = artRes.data as Article; // Use your Article type
+          
+          setTitle(art.title);
+          setContent(art.content);
+          setQuickAnswer(art.quick_answer || '');
+          setStatus(art.status as 'draft' | 'published');
+          
+          // IMPORTANT: Extract the ID from the category object
+          if (art.category) {
+            setCategoryId(art.category.id);
           }
         }
-      } catch (err) {
-        setError('Failed to load article data');
-      } finally {
-        setFetching(false);
       }
-    };
+    } catch (err) {
+      setError('Failed to load article data');
+    } finally {
+      setFetching(false);
+    }
+  };
 
-    initData();
-  }, [id]);
-
+  initData();
+}, [id]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
