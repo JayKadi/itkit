@@ -1,51 +1,34 @@
 import api from './api';
-import type { ApiResponse, Article, PaginationMeta } from '../types';
+import type { Article } from '../types';
 
 export const articleService = {
-  // Get all articles
-  getAll: async (params?: {
-    status?: string;
-    category?: string;
-    limit?: number;
-    offset?: number;
-  }) => {
-    const response = await api.get<ApiResponse<Article[]> & { pagination?: PaginationMeta }>('/articles', { params });
+  // Fetch all articles (used by dashboard)
+  getAll: async (params?: { status?: string; limit?: number }) => {
+    const response = await api.get('/articles', { params });
     return response.data;
   },
 
-  // Get single article by slug
-  getBySlug: async (slug: string) => {
-    const response = await api.get<ApiResponse<Article>>(`/articles/${slug}`);
+  // 1. NEW: Get a single article by ID (Crucial for the Edit Page)
+  getById: async (id: string) => {
+    const response = await api.get(`/articles/${id}`);
     return response.data;
   },
 
-  // Create article (IT staff only)
-  create: async (data: {
-    title: string;
-    content: string;
-    quick_answer?: string;
-    category_id?: string;
-    status?: string;
-  }) => {
-    const response = await api.post<ApiResponse<Article>>('/articles', data);
+  // Create a new article
+  create: async (data: Partial<Article>) => {
+    const response = await api.post('/articles', data);
     return response.data;
   },
 
-  // Update article
-  update: async (id: string, data: any) => {
-    const response = await api.put<ApiResponse<Article>>(`/articles/${id}`, data);
+  // 2. NEW: Update an existing article (The "U" in CRUD)
+  update: async (id: string, data: Partial<Article>) => {
+    const response = await api.put(`/articles/${id}`, data);
     return response.data;
   },
 
-  // Delete article
+  // Delete an article
   delete: async (id: string) => {
-    const response = await api.delete<ApiResponse>(`/articles/${id}`);
-    return response.data;
-  },
-
-  // Search articles
-  search: async (query: string) => {
-    const response = await api.get(`/search?q=${encodeURIComponent(query)}`);
+    const response = await api.delete(`/articles/${id}`);
     return response.data;
   },
 };
