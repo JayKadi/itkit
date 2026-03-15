@@ -7,6 +7,8 @@ import SearchPage from './pages/SearchPage';
 import CategoryPage from './pages/CategoryPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import NewArticlePage from './pages/admin/NewArticlePage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import LoginPage from './pages/LoginPage';
 
 function App() {
   return (
@@ -57,6 +59,38 @@ function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/new-article" element={<NewArticlePage />} />
       </Routes>
+      <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/article/:slug" element={<ArticleDetailPage />} />
+      <Route path="/login" element={<LoginPage/>} />
+
+      {/* 🔐 Protected Admin Routes */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'it_staff']}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/new-article"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'it_staff']}>
+            <NewArticlePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/edit-article/:id"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'it_staff']}>
+            <EditArticle/>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
     </Router>
   );
 }
