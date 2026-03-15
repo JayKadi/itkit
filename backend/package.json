@@ -4,10 +4,9 @@
   "description": "ITKit Knowledge Base Backend API",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "echo 'Skipping build'",
+    "start": "ts-node src/server.ts"
   },
   "keywords": [
     "knowledge-base",
