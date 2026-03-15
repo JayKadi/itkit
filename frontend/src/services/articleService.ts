@@ -2,15 +2,20 @@ import api from './api';
 import type { Article } from '../types';
 
 export const articleService = {
-  // Fetch all articles (used by dashboard)
-  getAll: async (params?: { status?: string; limit?: number }) => {
+  // Fetch all articles (Updated to allow category filtering)
+  getAll: async (params?: { status?: string; limit?: number; category?: string; categoryId?: string }) => {
     const response = await api.get('/articles', { params });
     return response.data;
   },
-
+  
   // 1. NEW: Get a single article by ID (Crucial for the Edit Page)
   getById: async (id: string) => {
     const response = await api.get(`/articles/${id}`);
+    return response.data;
+  },
+  // 🚀 ADD THIS NEW METHOD HERE:
+  getBySlug: async (slug: string) => {
+    const response = await api.get(`/articles/slug/${slug}`);
     return response.data;
   },
 
