@@ -26,7 +26,7 @@ const calculateReadTime = (content: string): number => {
 // CREATE ARTICLE
 // =====================================================
 export const createArticle = async (
-  req: AuthRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
@@ -36,7 +36,6 @@ export const createArticle = async (
       quick_answer,
       category_id,
       status = 'draft',
-      tags = [],
     }: CreateArticleRequest = req.body;
 
     // Validation
@@ -44,23 +43,6 @@ export const createArticle = async (
       res.status(400).json({
         success: false,
         error: 'Title and content are required',
-      });
-      return;
-    }
-
-    if (!req.user) {
-      res.status(401).json({
-        success: false,
-        error: 'Not authenticated',
-      });
-      return;
-    }
-
-    // Check if user is IT staff or admin
-    if (req.user.role !== 'it_staff' && req.user.role !== 'admin') {
-      res.status(403).json({
-        success: false,
-        error: 'Only IT staff can create articles',
       });
       return;
     }
@@ -86,8 +68,8 @@ export const createArticle = async (
     // Calculate estimated read time
     const estimated_read_time = calculateReadTime(content);
 
-    // Create article
-    const { data: newArticle, error } = await (supabase
+    // Create article (no auth required for demo)
+    const { data: newArticle, error } = await supabase
       .from('articles')
       .insert({
         title,
@@ -95,18 +77,12 @@ export const createArticle = async (
         content,
         quick_answer: quick_answer || null,
         category_id: category_id || null,
-        author_id: req.user!.id,
+        author_id: null,
         status,
         estimated_read_time,
-      } as any)
-      .select(
-        `
-        *,
-        category:categories(id, name, slug, icon),
-        author:users(id, full_name)
-      `
-      )
-      .single());
+      })
+      .select('*')
+      .single();
 
     if (error || !newArticle) {
       console.error('Create article error:', error);
@@ -115,16 +91,6 @@ export const createArticle = async (
         error: 'Failed to create article',
       });
       return;
-    }
-
-    // Handle tags if provided
-    if (tags.length > 0) {
-      const articleTags = tags.map((tag_id) => ({
-        article_id: (newArticle as any).id,
-        tag_id,
-      }));
-
-      await (supabase as any).from('article_tags').insert(articleTags);
     }
 
     res.status(201).json({
@@ -156,35 +122,18 @@ export const getArticles = async (
       offset = 0,
     } = req.query;
 
+    // Build query without joins
     let query = supabase
       .from('articles')
-      .select(
-        `
-        id,
-        title,
-        slug,
-        content,
-        quick_answer,
-        category:categories(id, name, slug, icon),
-        author:users(id, full_name),
-        status,
-        view_count,
-        helpful_count,
-        not_helpful_count,
-        estimated_read_time,
-        created_at,
-        updated_at
-      `,
-        { count: 'exact' }
-      );
+      .select('*', { count: 'exact' });
 
-      // Filter by status (unless status is "all")
+    // Filter by status (unless status is "all")
     if (status && status !== 'all') {
       query = query.eq('status', status);
     }
 
     // Filter by category slug
-    if (category) {
+    if (category && typeof category === 'string') {
       const { data: categoryData } = await supabase
         .from('categories')
         .select('id')
@@ -192,7 +141,7 @@ export const getArticles = async (
         .single();
 
       if (categoryData) {
-        query = query.eq('category_id', (categoryData as any).id);
+        query = query.eq('category_id', categoryData.id);
       }
     }
 
@@ -215,9 +164,37 @@ export const getArticles = async (
       return;
     }
 
+    // Manually fetch categories for articles
+    const categoryIds = articles
+      ?.map((a: any) => a.category_id)
+      .filter((id: any) => id !== null) || [];
+
+    let categoriesMap: { [key: string]: any } = {};
+
+    if (categoryIds.length > 0) {
+      const { data: categories } = await supabase
+        .from('categories')
+        .select('*')
+        .in('id', categoryIds);
+
+      if (categories) {
+        categoriesMap = categories.reduce((acc: any, cat: any) => {
+          acc[cat.id] = cat;
+          return acc;
+        }, {});
+      }
+    }
+
+    // Attach categories to articles
+    const articlesWithCategories = articles?.map((article: any) => ({
+      ...article,
+      category: article.category_id ? categoriesMap[article.category_id] : null,
+      author: null,
+    }));
+
     res.status(200).json({
       success: true,
-      data: articles,
+      data: articlesWithCategories || [],
       pagination: {
         total: count || 0,
         limit: limitNum,
@@ -244,18 +221,11 @@ export const getArticleBySlug = async (
   try {
     const { slug } = req.params;
 
-    const { data: article, error } = await (supabase
+    const { data: article, error } = await supabase
       .from('articles')
-      .select(
-        `
-        *,
-        category:categories(id, name, slug, icon),
-        author:users(id, full_name, email),
-        tags:article_tags(tag:tags(id, name, slug))
-      `
-      )
-      .eq('slug', slug as any)
-      .single());
+      .select('*')
+      .eq('slug', slug)
+      .single();
 
     if (error || !article) {
       res.status(404).json({
@@ -265,15 +235,30 @@ export const getArticleBySlug = async (
       return;
     }
 
+    // Manually fetch category if exists
+    let category = null;
+    if ((article as any).category_id) {
+      const { data: categoryData } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('id', (article as any).category_id)
+        .single();
+      category = categoryData;
+    }
+
     // Increment view count
-    await (supabase as any)
+    await supabase
       .from('articles')
       .update({ view_count: (article as any).view_count + 1 })
       .eq('id', (article as any).id);
 
     res.status(200).json({
       success: true,
-      data: article,
+      data: {
+        ...article,
+        category,
+        author: null,
+      },
     });
   } catch (error) {
     console.error('Get article error:', error);
@@ -299,7 +284,6 @@ export const updateArticle = async (
       quick_answer,
       category_id,
       status,
-      tags,
     }: UpdateArticleRequest = req.body;
 
     if (!req.user) {
@@ -320,11 +304,11 @@ export const updateArticle = async (
     }
 
     // Check if article exists
-    const { data: existingArticle, error: fetchError } = await (supabase
+    const { data: existingArticle, error: fetchError } = await supabase
       .from('articles')
       .select('id, author_id')
-      .eq('id', id as any)
-      .single());
+      .eq('id', id)
+      .single();
 
     if (fetchError || !existingArticle) {
       res.status(404).json({
@@ -360,17 +344,11 @@ export const updateArticle = async (
     }
 
     // Update article
-    const { data: updatedArticle, error: updateError } = await (supabase as any)
+    const { data: updatedArticle, error: updateError } = await supabase
       .from('articles')
       .update(updateData)
-      .eq('id', id as any)
-      .select(
-        `
-        *,
-        category:categories(id, name, slug, icon),
-        author:users(id, full_name)
-      `
-      )
+      .eq('id', id)
+      .select('*')
       .single();
 
     if (updateError || !updatedArticle) {
@@ -380,22 +358,6 @@ export const updateArticle = async (
         error: 'Failed to update article',
       });
       return;
-    }
-
-    // Update tags if provided
-    if (tags) {
-      // Delete existing tags
-      await (supabase as any).from('article_tags').delete().eq('article_id', id as any);
-
-      // Insert new tags
-      if (tags.length > 0) {
-        const articleTags = tags.map((tag_id) => ({
-          article_id: id,
-          tag_id,
-        }));
-
-        await (supabase as any).from('article_tags').insert(articleTags);
-      }
     }
 
     res.status(200).json({
@@ -440,11 +402,11 @@ export const deleteArticle = async (
     }
 
     // Check if article exists
-    const { data: existingArticle, error: fetchError } = await (supabase
+    const { data: existingArticle, error: fetchError } = await supabase
       .from('articles')
       .select('id')
-      .eq('id', id as any)
-      .single());
+      .eq('id', id)
+      .single();
 
     if (fetchError || !existingArticle) {
       res.status(404).json({
@@ -454,11 +416,11 @@ export const deleteArticle = async (
       return;
     }
 
-    // Delete article (cascades to article_tags, feedback, etc.)
-    const { error: deleteError } = await (supabase as any)
+    // Delete article
+    const { error: deleteError } = await supabase
       .from('articles')
       .delete()
-      .eq('id', id as any);
+      .eq('id', id);
 
     if (deleteError) {
       console.error('Delete article error:', deleteError);
@@ -492,11 +454,11 @@ export const incrementViewCount = async (
   try {
     const { id } = req.params;
 
-    const { data: article, error: fetchError } = await (supabase
+    const { data: article, error: fetchError } = await supabase
       .from('articles')
       .select('id, view_count')
-      .eq('id', id as any)
-      .single());
+      .eq('id', id)
+      .single();
 
     if (fetchError || !article) {
       res.status(404).json({
@@ -506,10 +468,10 @@ export const incrementViewCount = async (
       return;
     }
 
-    const { error: updateError } = await (supabase as any)
+    const { error: updateError } = await supabase
       .from('articles')
       .update({ view_count: (article as any).view_count + 1 })
-      .eq('id', id as any);
+      .eq('id', id);
 
     if (updateError) {
       res.status(500).json({
