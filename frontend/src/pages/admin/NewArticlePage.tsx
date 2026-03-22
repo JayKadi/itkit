@@ -41,12 +41,12 @@ const NewArticlePage = () => {
 
     try {
       const response = await articleService.create({
-        title,
-        content,
-        quick_answer: quickAnswer || undefined,
-        category_id: categoryId || undefined,
-        status,
-      });
+  title,
+  content,
+  quick_answer: quickAnswer || undefined,
+  category_id: categoryId || undefined,
+  status,
+} as any);  // ← Add "as any"
 
       if (response.success) {
         setSuccess('Article created successfully!');
