@@ -7,15 +7,13 @@ import SearchPage from './pages/SearchPage';
 import CategoryPage from './pages/CategoryPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import NewArticlePage from './pages/admin/NewArticlePage';
-import EditArticlePage from './pages/admin/EditArticle'; // Added this import
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import LoginPage from './pages/LoginPage';
+import EditArticlePage from './pages/admin/EditArticle';
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* --- PUBLIC ROUTES (with Navbar/Footer) --- */}
+        {/* Public routes with Navbar/Footer */}
         <Route path="/" element={
           <div className="flex flex-col min-h-screen">
             <Navbar />
@@ -56,33 +54,10 @@ function App() {
           </div>
         } />
 
-        <Route path="/login" element={<LoginPage />} />
-
-        {/* --- 🔐 PROTECTED ADMIN ROUTES (No Navbar/Footer) --- */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={['admin', 'it_staff']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/new-article"
-          element={
-            <ProtectedRoute allowedRoles={['admin', 'it_staff']}>
-              <NewArticlePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/edit-article/:id"
-          element={
-            <ProtectedRoute allowedRoles={['admin', 'it_staff']}>
-              <EditArticlePage /> 
-            </ProtectedRoute>
-          }
-        />
+        {/* Admin routes - PUBLIC (no auth for demo) */}
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/new-article" element={<NewArticlePage />} />
+        <Route path="/admin/edit-article/:id" element={<EditArticlePage />} />
       </Routes>
     </Router>
   );
