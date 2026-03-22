@@ -13,6 +13,11 @@ export const articleService = {
     const response = await api.get(`/articles/${id}`);
     return response.data;
   },
+   // Search articles - ADD THIS
+  search: async (query: string) => {
+    const response = await api.get(`/search?q=${encodeURIComponent(query)}`);
+    return response.data;
+  },
   // 🚀 ADD THIS NEW METHOD HERE:
   getBySlug: async (slug: string) => {
     const response = await api.get(`/articles/slug/${slug}`);
